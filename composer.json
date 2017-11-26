@@ -1,0 +1,19 @@
+{
+  "name": "orange",
+  "type": "library",
+  "description": "PHP library",
+  "keywords": ["framework", "swoole", "web service"],
+  "require": {
+    "guzzlehttp/psr7": "^1.4",
+    "monolog/monolog": "~1.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "Orange\\": "src",
+      "App\\":"app"
+    },
+    "files": [
+      "src/Application/helpers.php"
+    ]
+  }
+}
