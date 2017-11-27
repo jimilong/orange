@@ -2,23 +2,16 @@
 
 namespace Orange\Async;
 
-use Orange\Async\Client\Redis;
 use Orange\Async\Pool\RedisProxy;
+use Orange\Application\Code;
 
 class AsyncRedis
 {   
     protected static $timeout = 1;
 
-    protected static $usePool = true;
-
     public static function setTimeout($timeout)
     {
         self::$timeout = $timeout;
-    }
-
-    public static function enablePool($status)
-    {
-        self::$usePool = boolval($status);
     }
 
     /**
@@ -30,19 +23,8 @@ class AsyncRedis
      */
     public static function __callStatic($method, $parameters)
     {   
-        if (self::$usePool) {
-            $pool = app('redisPool');
-            $redis = new RedisProxy($pool);
-        } else {
-            $container = (yield getContainer());
-            $timeout = self::$timeout;
-            $redis = $container->singleton('redis', function() use ($timeout) {
-                $redis = new Redis();
-                $redis->setTimeout($timeout);
-                return $redis;
-            });
-            
-        }
+        $pool = app('redisPool');
+        $redis = new RedisProxy($pool);
 
         $redis->setMethod($method);
         $redis->setParameters($parameters);
@@ -50,7 +32,9 @@ class AsyncRedis
         if ($res && $res['response']) {
             yield $res['response'];
         } else {
-            yield false;
+            $e = new \Exception($res['error'], Code::ASYNC_REDIS_COMMAND);
+            yield throwException($e);
+            //yield false;
         }
     }
 }

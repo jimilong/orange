@@ -58,7 +58,7 @@ function getContext() {
 
 function throwException($e) {
     return new SysCall(function(Task $task) use ($e){
-        $task->setException($e);
+        $task->sendException($e);
 
         return Signal::TASK_CONTINUE;
     });

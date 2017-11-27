@@ -8,6 +8,8 @@
 namespace App\Controllers;
 
 use Orange\Async\AsyncFile;
+use Orange\Async\AsyncMysql;
+use Orange\Async\AsyncRedis;
 use Orange\Container\Container;
 use Orange\Discovery\Rpc;
 use Psr\Http\Message\ServerRequestInterface;
@@ -29,7 +31,18 @@ class IndexController
         //$call = (yield Rpc::call('UserSvr.Info.Get', ['uid' => 111111]));
         $call = 'test-debug';
         echo 'CALL-RESP----index-index:'.PHP_EOL;
-        var_dump($call);
+
+        yield app('asyncLog')->debug('async log test!!');
+
+        try {
+            $r = (yield AsyncMysql::query('select * from ad limit 1'));
+            //$r = (yield AsyncRedis::hGet('HASH:U:INFO:12345678', 'nickname'));
+            var_dump('res');
+        } catch (\Exception $e) {
+            var_dump($e->getMessage());
+        }
+
+
 
         $this->response->withContent(json_encode(['resp' => $call]))->withContentType('application/json; charset=utf-8');
         yield $this->response;

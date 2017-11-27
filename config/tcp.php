@@ -11,6 +11,8 @@ return [
         'Orange\ServiceProvider\ConfigServiceProvider',
         'Orange\ServiceProvider\LoggerServiceProvider',
         'Orange\ServiceProvider\TcpDispatcherServiceProvider',
+        'Orange\ServiceProvider\SyncLogServiceProvider',
+        'Orange\ServiceProvider\AsyncLogServiceProvider',
         //'Orange\Async\Pool\MysqlPoolServiceProvider',
         //'Orange\Async\Pool\RedisPoolServiceProvider',
     ],

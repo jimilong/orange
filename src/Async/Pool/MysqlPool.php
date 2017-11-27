@@ -2,9 +2,6 @@
 
 namespace Orange\Async\Pool;
 
-use Orange\Config\Config;
-use splQueue;
-
 class MysqlPool extends Pool
 {
     //MYSQL事务
@@ -12,8 +9,8 @@ class MysqlPool extends Pool
 
     public function __construct()
     {
-        $this->poolQueue = new splQueue();
-        $this->taskQueue = new splQueue();
+        $this->poolQueue = new \splQueue();
+        $this->taskQueue = new \splQueue();
         $config = app('config')->get('database::pdo');
         $this->minPool = $config['minPool'];
         $this->maxPool = $config['maxPool'];
@@ -34,38 +31,37 @@ class MysqlPool extends Pool
 
     public function createResources($init = false)
     {
-        try {
-            if ($init) {
-                for ($i = $this->ableCount; $i < $this->minPool; $i++) {
-                    $mysql = new \swoole_mysql;
-                    $mysql->connect($this->config, function(\swoole_mysql $mysql, $res) {
-                        if ($res) {
-                            $this->put($mysql);
-                        } else {
-                            $this->ableCount--;
-                        }
-                    });
-                    $this->ableCount++;
-                }
-                return;
-            }
-
-            if ($this->ableCount >= $this->maxPool - 1) {
-                return;
-            }
-
-            $mysql = new \swoole_mysql;
-            $mysql->connect($this->config, function(\swoole_mysql $mysql, $res) {
-                if ($res) {
+        if ($init) {
+            for ($i = $this->ableCount; $i < $this->minPool; $i++) {
+                $mysql = new \swoole_mysql;
+                $mysql->connect($this->config, function(\swoole_mysql $mysql, $res) {
+                    if ($res === false) {
+                        $this->ableCount--;
+                        app('syncLog')->error($mysql->connect_error.':'.$mysql->connect_errno);
+                        return;
+                    }
                     $this->put($mysql);
-                } else {
-                    $this->ableCount--;
-                }
-            });
-            $this->ableCount++;
-        } catch (\Exception $e) {
-            echo 'connect to mysql error ->code:'.$e->getCode().'->message:'.$e->getMessage().PHP_EOL;
+                });
+                $this->ableCount++;
+            }
+
+            return;
         }
+
+        if ($this->ableCount >= $this->maxPool - 1) {
+            return;
+        }
+
+        $mysql = new \swoole_mysql;
+        $mysql->connect($this->config, function(\swoole_mysql $mysql, $res) {
+            if ($res === false) {
+                $this->ableCount--;
+                app('syncLog')->error($mysql->connect_error.':'.$mysql->connect_errno);
+                return;
+            }
+            $this->put($mysql);
+        });
+        $this->ableCount++;
     }
 
     public function doTask()
@@ -73,7 +69,7 @@ class MysqlPool extends Pool
         $resource = false;
         $task = $this->taskQueue->dequeue();
         $taskId = $task['taskId'];
-        $methd = $task['methd'];
+        $methd = $task['method'];
         //存在事务
         if (isset($this->transaction[$taskId])) {
             $resource = $this->transaction[$taskId];
@@ -115,7 +111,7 @@ class MysqlPool extends Pool
                     return;
                 }
                 $result = new Result($res, $mysql->affected_rows, $mysql->insert_id);
-                call_user_func_array($callback, array('response' => $result));
+                call_user_func_array($callback, array('response' => $result, 'error' => null));
 
                 //若不存在事务则释放资源
                 if (! isset($this->transaction[$taskId])) {
@@ -134,7 +130,7 @@ class MysqlPool extends Pool
                     return;
                 }
                 $result = new Result($res, $mysql->affected_rows, $mysql->insert_id);
-                call_user_func_array($callback, array('response' => $result));
+                call_user_func_array($callback, array('response' => $result, 'error' => null));
                 //存在事务
                 if ($methd != 'begin') {
                     //释放资源

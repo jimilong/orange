@@ -2,7 +2,9 @@
 
 namespace Orange\Log;
 
-class Log
+use Orange\Application\Code;
+
+class SyncLog
 {
     const TRACE = 'TRACE'; //流程追踪
     const DEBUG = 'DEBUG';
@@ -148,8 +150,23 @@ class Log
 
     public function printConsoleLog($message, $level = 'TRACE', $file = '', $line = 0)
     {
-        $message = sprintf('[%s][%s][%s][%s]%s', date('Y-m-d H:i:s'), $level, $file, $line, $message);
+        $filename = $this->logPath . 'sync-' .date('Y-m-d') . '.log';
+        $this->checkWritePermission($filename);
 
-        error_log($message . PHP_EOL, 3, $this->logPath . 'sync-' .date('Y-m-d') . '.log');
+        $message = sprintf('[%s][%s][%s][%s] %s', date('Y-m-d H:i:s'), $level, $file, $line, $message);
+
+        error_log($message . PHP_EOL, 3, $filename);
+    }
+
+    protected function checkWritePermission($filename)
+    {
+        $dir = dirname($filename);
+        if (!is_dir($dir)) {
+            mkdir($dir, 0755, true);
+        }
+
+        if (file_exists($filename) && !is_writable($filename)) {
+            throw new  \Exception("The {$filename} not writable!", Code::FILE_NO_ACCESS);
+        }
     }
 }

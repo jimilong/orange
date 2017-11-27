@@ -4,9 +4,11 @@ return [
         'Orange\ServiceProvider\ConfigServiceProvider',
         'Orange\ServiceProvider\LoggerServiceProvider',
         'Orange\ServiceProvider\RouterServiceProvider',
+        'Orange\ServiceProvider\SyncLogServiceProvider',
+        'Orange\ServiceProvider\AsyncLogServiceProvider',
         //'Orange\ServiceProvider\TcpDispatcherServiceProvider',
-        //'Orange\Async\Pool\MysqlPoolServiceProvider',
-        //'Orange\Async\Pool\RedisPoolServiceProvider',
+        'Orange\ServiceProvider\MysqlPoolServiceProvider',
+        //'Orange\ServiceProvider\RedisPoolServiceProvider',
     ],
     'setting' => [
         'ip' => '127.0.0.1',

@@ -11,7 +11,6 @@ use Orange\Async\AsyncLog;
 use Orange\Async\AsyncMysql;
 use Orange\Async\AsyncTcp;
 use Orange\Server\HttpServer;
-use Orange\Connection\Manager;
 use Orange\Protocol\Packet;
 
 function echoTimes($msg, $max) {
@@ -106,6 +105,8 @@ function readFile1()
 
 function task3() {
     echo 'do task3'.PHP_EOL;
+    $e = new \Exception('test yield error', 11110);
+    yield throwException($e);
     yield $a = 1 + 2;
 }
 
@@ -118,8 +119,13 @@ function task2() {
 
 function task1() {
     echo 'do task1'.PHP_EOL;
-    yield task2();
+    try {
+        yield task2();
+    } catch (\Exception $e) {
+        var_dump($e->getMessage());
+    }
 }
+
 
 
 //Task::execute(task1());

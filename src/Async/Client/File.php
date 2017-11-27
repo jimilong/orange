@@ -3,6 +3,7 @@
 namespace Orange\Async\Client;
 
 use Orange\Coroutine\Task;
+use Orange\Application\Code;
 
 class File implements Base
 {
@@ -48,7 +49,9 @@ class File implements Base
                 break;
         }
         if ($f == false) {
-            throw new \Exception('open file '.$this->filename.' failed', 101);
+            $e = new \Exception('open file '.$this->filename.' failed', code::OPEN_FILE_FAILED);
+            yield throwException($e);
+            //throw new \Exception('open file '.$this->filename.' failed', 101);
         }
     }
 }

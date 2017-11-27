@@ -2,8 +2,6 @@
 
 namespace Orange\Async\Client;
 
-use Orange\Config\Config;
-
 class Tcp implements Base
 {
     protected $ip;

@@ -3,18 +3,21 @@ return [
     //默认可以不开启读写配置，读写配置可以配置多个
     'pdo' => [
         'default' => [
+            'host'     => '192.168.18.240',
+            'user' => 'root',
+            'password' => '123456',
+            'port'     => '3309',
+            'dbname'   => 'db_config',
 
-            //"driver" => "pdo_mysql",
+            //"host" => "127.0.0.1",
 
-            "host" => "127.0.0.1",
+            //"port" => "3306",
 
-            "port" => "3306",
+            //"dbname" => "db_test",
 
-            "dbname" => "db_test",
+            //"user" => "root",
 
-            "user" => "root",
-
-            "password" => "",
+            //"password" => "",
 
             "charset" => "utf8mb4",
         ],

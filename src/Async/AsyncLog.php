@@ -2,53 +2,56 @@
 
 namespace Orange\Async;
 
-use Orange\Config\Config;
-
 class AsyncLog
 {
-    public static function debug($message, array $context  = [], $model = 'web.app')
+    protected $logDir = null;
+    public function __construct($path)
     {
-        return self::writeLog(__FUNCTION__, $message, $context, $model);
+        $this->logDir = $path;
     }
 
-    public static function info($message, array $context  = [], $model = 'web.app')
+    public function debug($message, array $context  = [], $model = 'web.app')
     {
-        return self::writeLog(__FUNCTION__, $message, $context, $model);
+        return $this->writeLog(__FUNCTION__, $message, $context, $model);
     }
 
-    public static function notice($message, array $context  = [], $model = 'web.app')
+    public function info($message, array $context  = [], $model = 'web.app')
     {
-        return self::writeLog(__FUNCTION__, $message, $context, $model);
+        return $this->writeLog(__FUNCTION__, $message, $context, $model);
     }
 
-    public static function warning($message, array $context  = [], $model = 'web.app')
+    public function notice($message, array $context  = [], $model = 'web.app')
     {
-        return self::writeLog(__FUNCTION__, $message, $context, $model);
+        return $this->writeLog(__FUNCTION__, $message, $context, $model);
     }
 
-    public static function error($message, array $context  = [], $model = 'web.app')
+    public function warning($message, array $context  = [], $model = 'web.app')
     {
-        return self::writeLog(__FUNCTION__, $message, $context, $model);
+        return $this->writeLog(__FUNCTION__, $message, $context, $model);
     }
 
-    public static function critical($message, array $context  = [], $model = 'web.app')
+    public function error($message, array $context  = [], $model = 'web.app')
     {
-        return self::writeLog(__FUNCTION__, $message, $context, $model);
+        return $this->writeLog(__FUNCTION__, $message, $context, $model);
     }
 
-    public static function alert($message, array $context  = [], $model = 'web.app')
+    public function critical($message, array $context  = [], $model = 'web.app')
     {
-        return self::writeLog(__FUNCTION__, $message, $context, $model);
+        return $this->writeLog(__FUNCTION__, $message, $context, $model);
     }
 
-    public static function emergency($message, array $context  = [], $model = 'web.app')
+    public function alert($message, array $context  = [], $model = 'web.app')
     {
-        return self::writeLog(__FUNCTION__, $message, $context, $model);
+        return $this->writeLog(__FUNCTION__, $message, $context, $model);
     }
 
-    public static function writeLog($level, $message, $context, $model)
+    public function emergency($message, array $context  = [], $model = 'web.app')
+    {
+        return $this->writeLog(__FUNCTION__, $message, $context, $model);
+    }
+
+    public function writeLog($level, $message, $context, $model)
     {   
-        $logDir = app('config')->get("app::log");
         if (!empty($context)) {
             $context = json_encode($context);
         } else {
@@ -56,6 +59,6 @@ class AsyncLog
         }
 
         $record = "[".date('Y-n-d H:i:s')."] {$model}.{$level}: {$message} [{$context}]\n";
-        yield AsyncFile::write($logDir.date('Ymd').".log", $record, FILE_APPEND);
+        yield AsyncFile::write($this->logDir. 'async-' .date('Y-m-d').".log", $record, FILE_APPEND);
     }
 }

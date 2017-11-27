@@ -112,9 +112,9 @@ class Application extends Container
             $response->end((string) $resp->getBody());
         } catch (\Throwable $t) {
             $e = t2ex($t);
-            throwException($e);
+            yield throwException($e);
         } catch (\Exception $e) {
-            throwException($e);
+            yield throwException($e);
         } finally {
             unset($req);
             unset($resp);

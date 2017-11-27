@@ -36,7 +36,6 @@ class Scheduler
         $signal = $this->handleTaskStack($value);
         if ($signal !== null) return $signal;
 
-
         $signal = $this->checkTaskDone($value);
         if ($signal !== null) return $signal;
 
@@ -64,13 +63,12 @@ class Scheduler
             return;
         }
 
-        try{
+        try{//todo ??
             if ($isFirstCall) {
                 $coroutine = $this->task->getCoroutine();
             } else {
                 $coroutine = $this->stack->pop();
             }
-
 
             $this->task->setCoroutine($coroutine);
             $coroutine->throw($e);
@@ -85,11 +83,22 @@ class Scheduler
         }
     }
 
-    public function asyncCallback($response, $error = null, $calltime = 0)
+    public function asyncCallback($response, $exception = null)
     {
-        $callbackData = ['response' => $response, 'error' => $error, 'calltime' => $calltime];
-        $this->task->send($callbackData);
-        $this->task->run();
+        if ($this->isTaskInvalid($exception)) {
+            return;
+        }
+
+        // 兼容PHP7 & PHP5
+        if ($exception instanceof \Throwable || $exception instanceof \Exception) {
+            $this->throwException($exception, true, true);
+        } else {
+            $this->task->send($response);
+            $this->task->run();
+        }
+        //$callbackData = ['response' => $response, 'error' => $error, 'calltime' => $calltime];
+        //$this->task->send($callbackData);
+        //$this->task->run();
     }
 
     private function handleSysCall($value)
@@ -175,8 +184,7 @@ class Scheduler
         if ($status === Signal::TASK_KILLED || $status === Signal::TASK_DONE) {
             // 兼容PHP7 & PHP5
             if ($t instanceof \Throwable || $t instanceof \Exception) {
-                sys_echo("Uncaught Exception");
-                echo_exception($t);
+                app('syncLog')->error($t->getMessage(), ['code' => $t->getCode(), 'trace' => $t->getTraceAsString()]);
             }
             return true;
         }

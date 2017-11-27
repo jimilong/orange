@@ -3,6 +3,7 @@
 namespace Orange\Async;
 
 use Orange\Async\Client\File;
+use Orange\Application\Code;
 
 class AsyncFile
 {   
@@ -23,7 +24,7 @@ class AsyncFile
      */
     public static function write($filename, $content, $flags = 0)
     {   
-        self::checWritePermission($filename);
+        self::checkWritePermission($filename);
 
         $file = new File();
         $file->write($filename, $content, $flags);
@@ -32,19 +33,16 @@ class AsyncFile
         yield $res['response'];
     }
 
-    private static function checWritePermission($filename)
-    {   
-        $parts = explode('/', $filename);
-        array_pop($parts);
-        $dir = '';
-        foreach ($parts as $part) {
-            if (!is_dir($dir .= "$part/")) {
-                 mkdir($dir, 0755, true);
-            }
+    private static function checkWritePermission($filename)
+    {
+        $dir = dirname($filename);
+        if (!is_dir($dir)) {
+            mkdir($dir, 0755, true);
         }
 
         if (file_exists($filename) && !is_writable($filename)) {
-            throw new \Exception("The {$filename} not writable!");
+            $e = new \Exception("The {$filename} not writable!", Code::FILE_NO_ACCESS);
+            yield throwException($e);
         }
     }
 }

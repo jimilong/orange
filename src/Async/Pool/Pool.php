@@ -47,21 +47,16 @@ abstract class Pool
 
     abstract public function doTask();
 
-    public function request($methd, $parameters, callable $callback, $taskId = 0)
+    public function request($method, $parameters, callable $callback, $taskId = 0)
     {
         //入队列
-        $this->taskQueue->enqueue(['methd' => $methd, 'parameters' => $parameters, 'callback' => $callback, 'taskId' => $taskId]);
+        $this->taskQueue->enqueue(['method' => $method, 'parameters' => $parameters, 'callback' => $callback, 'taskId' => $taskId]);
 
         if (!$this->poolQueue->isEmpty()) {
             $this->doTask();
         } else {
             $this->createResources();
         }
-
-//          todo
-//        if (count($this->resources) < $this->maxPool && $this->ableCount < $this->maxPool) {
-//            $this->createResources();
-//        }
     }
 
     public function remove($resource)

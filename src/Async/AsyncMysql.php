@@ -3,7 +3,7 @@
 namespace Orange\Async;
 
 use Orange\Async\Pool\MysqlProxy;
-use Orange\Async\Client\Mysql;
+use Orange\Application\Code;
 
 class AsyncMysql
 {   
@@ -16,38 +16,24 @@ class AsyncMysql
         self::$timeout = $timeout;
     }
 
-    public static function query($sql, $userPool = true)
-    {   
-        if ($userPool) {
-            $pool = app('mysqlPool');
-            $mysql = new MysqlProxy($pool);
-        } else {
-            $container = (yield getContainer());
-            $timeout = self::$timeout;
-            $mysql = $container->singleton('mysql', function() use ($timeout) {
-                $mysql = new Mysql();
-                $mysql->setTimeout($timeout);
-                return $mysql;
-            });
-        }
+    public static function query($sql)
+    {
+        $pool = app('mysqlPool');
+        $mysql = new MysqlProxy($pool);
 
         $mysql->query($sql);
         $res = (yield $mysql);
         if ($res && $res['response']) {
             yield $res['response'];
         } else {
-            yield false;
+            $e = new \Exception($res['error'], Code::ASYNC_MYSQL_QUERY);
+            yield throwException($e);
+            //yield false;
         }
     }
 
-    public static function begin($userPool = true)
+    public static function begin()
     {
-        if (!$userPool) {
-            $res = (yield self::query('begin', false));
-            yield $res;
-            return;
-        }
-
         $pool = app('mysqlPool');
         $mysql = new MysqlProxy($pool);
 
@@ -56,18 +42,14 @@ class AsyncMysql
         if ($res && $res['response']) {
             yield $res['response'];
         } else {
-            yield false;
+            $e = new \Exception($res['error'], Code::ASYNC_MYSQL_BEGIN);
+            yield throwException($e);
+            //yield false;
         }
     }
 
-    public static function commit($userPool = true)
+    public static function commit()
     {
-        if (!$userPool) {
-            $res = (yield self::query('commit', false));
-            yield $res;
-            return;
-        }
-
         $pool = app('mysqlPool');
         $mysql = new MysqlProxy($pool);
 
@@ -76,18 +58,14 @@ class AsyncMysql
         if ($res && $res['response']) {
             yield $res['response'];
         } else {
-            yield false;
+            $e = new \Exception($res['error'], Code::ASYNC_MYSQL_COMMIT);
+            yield throwException($e);
+            //yield false;
         }
     }
 
-    public static function rollback($userPool = true)
+    public static function rollback()
     {
-        if (!$userPool) {
-            $res = (yield self::query('rollback', false));
-            yield $res;
-            return;
-        }
-
         $pool = app('mysqlPool');
         $mysql = new MysqlProxy($pool);
 
@@ -96,7 +74,9 @@ class AsyncMysql
         if ($res && $res['response']) {
             yield $res['response'];
         } else {
-            yield false;
+            $e = new \Exception($res['error'], Code::ASYNC_MYSQL_ROLLBACK);
+            yield throwException($e);
+            //yield false;
         }
     }
 }

@@ -32,38 +32,36 @@ class RedisPool extends Pool
         }
         $this->options['timeout'] = $this->timeout;
 
-        try {
-            if ($init) {
-                for ($i = $this->ableCount; $i < $this->minPool; $i++) {
-                    $client = new \swoole_redis($this->options);
-                    $client->connect($ip, $port, function (\swoole_redis $client, $res) {
-                        if ($res) {
-                            $this->put($client);
-                        } else {
-                            $this->ableCount--;
-                        }
-                    });
-                    $this->ableCount++;
-                }
-                return;
-            }
-
-            if ($this->ableCount >= $this->maxPool - 1) {
-                return;
-            }
-
-            $client = new \swoole_redis($this->options);
-            $client->connect($ip, $port, function (\swoole_redis $client, $res) {
-                if ($res) {
+        if ($init) {
+            for ($i = $this->ableCount; $i < $this->minPool; $i++) {
+                $client = new \swoole_redis($this->options);
+                $client->connect($ip, $port, function (\swoole_redis $client, $res) {
+                    if ($res === false) {
+                        $this->ableCount--;
+                        app('syncLog')->error($client->errMsg.':'.$client->errCode);
+                        return;
+                    }
                     $this->put($client);
-                } else {
-                    $this->ableCount--;
-                }
-            });
-            $this->ableCount++;
-        } catch (\Exception $e) {
-            echo 'connect to redis error ->code:'.$e->getCode().'->message:'.$e->getMessage().PHP_EOL;
+                });
+                $this->ableCount++;
+            }
+            return;
         }
+
+        if ($this->ableCount >= $this->maxPool - 1) {
+            return;
+        }
+
+        $client = new \swoole_redis($this->options);
+        $client->connect($ip, $port, function (\swoole_redis $client, $res) {
+            if ($res === false) {
+                $this->ableCount--;
+                app('syncLog')->error($client->errMsg.':'.$client->errCode);
+                return;
+            }
+            $this->put($client);
+        });
+        $this->ableCount++;
     }
 
     public function doTask()
@@ -84,14 +82,14 @@ class RedisPool extends Pool
         }
 
         $task = $this->taskQueue->dequeue();
-        $method = $task['methd'];
+        $method = $task['method'];
         $parameters = $task['parameters'];
         $callback = $task['callback'];
         array_push($parameters, function(\swoole_redis $client, $res) use ($callback) {
             if ($res === false) {
                 call_user_func_array($callback, array('response' => false, 'error' => $client->errMsg));
             } else {
-                call_user_func_array($callback, array('response' => $res));
+                call_user_func_array($callback, array('response' => $res, 'error' => null));
             }
             $this->release($client);
         });
