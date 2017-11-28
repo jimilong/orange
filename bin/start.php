@@ -83,11 +83,16 @@ function rpcSend()
 
 function readFile1()
 {
-    for ($i=0;$i<5;$i++) {
-        $file = '/Users/longmin/web/test.txt';
-        yield AsyncFile::read($file);
-        echo 'read file  -> '.$i.PHP_EOL;
-    }
+    //for ($i=0;$i<5;$i++) {
+        try {
+            $file = '/Users/longmin/web/test.txt';
+            $resp = (yield AsyncFile::read($file));
+            var_dump($resp);
+        } catch (\Exception $e) {
+            var_dump($e->getMessage());
+        }
+
+    //}
 }
 
 //$container = new \Orange\Container\Container();
@@ -128,7 +133,9 @@ function task1() {
 
 
 
-//Task::execute(task1());
+
+
+//Task::execute(readFile1());
 
 //////********************//////////
 

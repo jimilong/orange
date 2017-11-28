@@ -87,9 +87,10 @@ class RedisPool extends Pool
         $callback = $task['callback'];
         array_push($parameters, function(\swoole_redis $client, $res) use ($callback) {
             if ($res === false) {
-                call_user_func_array($callback, array('response' => false, 'error' => $client->errMsg));
+                $e = new \Exception($client->errMsg, $client->errCode);
+                call_user_func_array($callback, [false, $e]);
             } else {
-                call_user_func_array($callback, array('response' => $res, 'error' => null));
+                call_user_func_array($callback, [$res]);
             }
             $this->release($client);
         });

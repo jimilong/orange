@@ -3,7 +3,6 @@
 namespace Orange\Async;
 
 use Orange\Async\Pool\MysqlProxy;
-use Orange\Application\Code;
 
 class AsyncMysql
 {   
@@ -23,13 +22,7 @@ class AsyncMysql
 
         $mysql->query($sql);
         $res = (yield $mysql);
-        if ($res && $res['response']) {
-            yield $res['response'];
-        } else {
-            $e = new \Exception($res['error'], Code::ASYNC_MYSQL_QUERY);
-            yield throwException($e);
-            //yield false;
-        }
+        yield $res;
     }
 
     public static function begin()
@@ -39,13 +32,7 @@ class AsyncMysql
 
         $mysql->begin();
         $res = (yield $mysql);
-        if ($res && $res['response']) {
-            yield $res['response'];
-        } else {
-            $e = new \Exception($res['error'], Code::ASYNC_MYSQL_BEGIN);
-            yield throwException($e);
-            //yield false;
-        }
+        yield $res;
     }
 
     public static function commit()
@@ -55,13 +42,7 @@ class AsyncMysql
 
         $mysql->commit();
         $res = (yield $mysql);
-        if ($res && $res['response']) {
-            yield $res['response'];
-        } else {
-            $e = new \Exception($res['error'], Code::ASYNC_MYSQL_COMMIT);
-            yield throwException($e);
-            //yield false;
-        }
+        yield $res;
     }
 
     public static function rollback()
@@ -71,12 +52,6 @@ class AsyncMysql
 
         $mysql->rollback();
         $res = (yield $mysql);
-        if ($res && $res['response']) {
-            yield $res['response'];
-        } else {
-            $e = new \Exception($res['error'], Code::ASYNC_MYSQL_ROLLBACK);
-            yield throwException($e);
-            //yield false;
-        }
+        yield $res;
     }
 }

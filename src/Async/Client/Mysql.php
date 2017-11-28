@@ -54,7 +54,8 @@ class Mysql implements Base
         } else {
             $this->mysql->connect($this->config, function(\swoole_mysql $mysql, $res) use ($callback) {
                 if ($res === false) {
-                    call_user_func_array($callback, array('response' => false, 'error' => "connect to mysql server failed", 'calltime' => 0));
+                    $e = new \Exception($mysql->connect_error, $mysql->connect_errno);
+                    call_user_func_array($callback, [false, $e]);
                     return;
                 }
 
@@ -68,10 +69,11 @@ class Mysql implements Base
         if ($this->sql == "begin") {
             $this->mysql->begin(function(\swoole_mysql $mysql, $res) use ($callback) {
                 if ($res === false) {
-                    call_user_func_array($callback, array('response' => false, 'error' => $mysql->error));
+                    $e = new \Exception('mysql begin error' ,21);
+                    call_user_func_array($callback, [false, $e]);
                     return;
                 }
-                call_user_func_array($callback, array('response' => true, 'error' => null));
+                call_user_func_array($callback, [true]);
             });
             return;
         }
@@ -79,10 +81,11 @@ class Mysql implements Base
         if ($this->sql == "commit") {
             $this->mysql->commit(function(\swoole_mysql $mysql, $res) use ($callback) {
                 if ($res === false) {
-                    call_user_func_array($callback, array('response' => false, 'error' => $mysql->error));
+                    $e = new \Exception('mysql commit error' ,22);
+                    call_user_func_array($callback, [false, $e]);
                     return;
                 }
-                call_user_func_array($callback, array('response' => true, 'error' => null));
+                call_user_func_array($callback, [true]);
             });
             return;
         }
@@ -90,22 +93,23 @@ class Mysql implements Base
         if ($this->sql == "rollback") {
             $this->mysql->rollback(function(\swoole_mysql $mysql, $res) use ($callback) {
                 if ($res === false) {
-                    call_user_func_array($callback, array('response' => false, 'error' => $mysql->error));
+                    $e = new \Exception('mysql rollback error' ,22);
+                    call_user_func_array($callback, [false, $e]);
                     return;
                 }
-                call_user_func_array($callback, array('response' => true, 'error' => null));
+                call_user_func_array($callback, [true]);
             });
             return;
         }
 
         $this->mysql->query($this->sql, function(\swoole_mysql $mysql, $res) use ($callback) {
-            $this->calltime = microtime(true) - $this->calltime;
             if ($res === false) {
-                call_user_func_array($callback, array('response' => false, 'error' => $mysql->error, 'calltime' => $this->calltime));
+                $e = new \Exception($mysql->error, $mysql->errno);
+                call_user_func_array($callback, [false, $e]);
                 return;
             }
             $result = new Result($res, $mysql->affected_rows, $mysql->insert_id);
-            call_user_func_array($callback, array('response' => $result, 'error' => null, 'calltime' => $this->calltime));
+            call_user_func_array($callback, [$result]);
         });
     }
 

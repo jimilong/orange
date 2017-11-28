@@ -96,9 +96,6 @@ class Scheduler
             $this->task->send($response);
             $this->task->run();
         }
-        //$callbackData = ['response' => $response, 'error' => $error, 'calltime' => $calltime];
-        //$this->task->send($callbackData);
-        //$this->task->run();
     }
 
     private function handleSysCall($value)

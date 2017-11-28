@@ -41,10 +41,6 @@ class AsyncTcp
         $client->setData($data);
         $res = (yield $client);
 
-        if ($res && $res['response']) {
-            yield $res['response'];
-        } else {
-            yield false;
-        }
+        yield $res;
     }
 }

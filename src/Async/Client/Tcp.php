@@ -70,7 +70,8 @@ class Tcp implements Base
                 if (!$this->isFinish) {
                     $this->client->close();
                     $this->isFinish = true;
-                    call_user_func_array($callback, array('response' => false, 'error' => 'timeout', 'calltime' => $this->calltime));
+                    $e = new \Exception('tcp call timeout', 504);
+                    call_user_func_array($callback, [false, $e]);
                 }
             });
         });
@@ -79,8 +80,8 @@ class Tcp implements Base
         });
 
         $this->client->on('error', function ($cli) use ($callback) {
-            $this->calltime = microtime(true) - $this->calltime;
-            call_user_func_array($callback, array('response' => false, 'error' => socket_strerror($cli->errCode), 'calltime' => $this->calltime));
+            $e = new \Exception(socket_strerror($cli->errCode), $cli->errCode);
+            call_user_func_array($callback, [false, $e]);
         });
 
         $this->client->on("receive", function ($cli, $data) use ($callback) {
@@ -93,13 +94,12 @@ class Tcp implements Base
                 if ($this->count == 0) {
                     $this->clearTimer();
                     $this->isFinish = true;
-                    $this->calltime = microtime(true) - $this->calltime;
                     if (count($this->return) == 1) {
                         $return = $this->return[0];
                     } else {
                         $return = $this->return;
                     }
-                    call_user_func_array($callback, array('response' => $return, 'error' => null, 'calltime' => $this->calltime));
+                    call_user_func_array($callback, [$return]);
                     $cli->close();
                 }
             }

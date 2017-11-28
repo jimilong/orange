@@ -37,12 +37,12 @@ class File implements Base
         switch ($this->action) {
             case 'read':
                 $f = swoole_async_readfile($this->filename, function($filename, $content) use ($callback) {
-                    call_user_func_array($callback, ['response' => $content]);
+                    call_user_func_array($callback, [$content]);
                 });
                 break;
             case 'write':
                 $f = swoole_async_writefile($this->filename, $this->content, function($filename) use ($callback) {
-                    call_user_func_array($callback, ['response' => true]);
+                    call_user_func_array($callback, [true]);
                 }, $this->flags);
                 break;
             default:
@@ -50,7 +50,8 @@ class File implements Base
         }
         if ($f == false) {
             $e = new \Exception('open file '.$this->filename.' failed', code::OPEN_FILE_FAILED);
-            yield throwException($e);
+            call_user_func_array($callback, [false, $e]);
+            //yield throwException($e);
             //throw new \Exception('open file '.$this->filename.' failed', 101);
         }
     }

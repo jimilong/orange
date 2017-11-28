@@ -104,14 +104,15 @@ class MysqlPool extends Pool
             $resource->$methd($task['parameters'], function(\swoole_mysql $mysql, $res) use ($callback, $methd, $taskId) {
                 if ($res === false) {
                     //TODO begin rollback commit 会失败吗
-                    call_user_func_array($callback, array('response' => false, 'error' => $mysql->error));
+                    $e = new \Exception($mysql->error, $mysql->errno);
+                    call_user_func_array($callback, [false, $e]);
                     if (! isset($this->transaction[$taskId])) {
                         $this->release($mysql);
                     }
                     return;
                 }
                 $result = new Result($res, $mysql->affected_rows, $mysql->insert_id);
-                call_user_func_array($callback, array('response' => $result, 'error' => null));
+                call_user_func_array($callback, [$result]);
 
                 //若不存在事务则释放资源
                 if (! isset($this->transaction[$taskId])) {
@@ -121,8 +122,8 @@ class MysqlPool extends Pool
         } else {
             $resource->$methd(function(\swoole_mysql $mysql, $res) use ($callback, $methd, $taskId) {
                 if ($res === false) {
-                    //TODO begin rollback commit 会失败吗
-                    call_user_func_array($callback, array('response' => false, 'error' => $mysql->error));
+                    $e = new \Exception('mysql '.$methd.' error' ,22);
+                    call_user_func_array($callback, [false, $e]);
                     if ($methd != 'begin') {
                         $this->release($mysql);
                         unset($this->transaction[$taskId]);
@@ -130,7 +131,7 @@ class MysqlPool extends Pool
                     return;
                 }
                 $result = new Result($res, $mysql->affected_rows, $mysql->insert_id);
-                call_user_func_array($callback, array('response' => $result, 'error' => null));
+                call_user_func_array($callback, [$result]);
                 //存在事务
                 if ($methd != 'begin') {
                     //释放资源

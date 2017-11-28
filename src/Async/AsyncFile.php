@@ -16,7 +16,7 @@ class AsyncFile
         $file->read($filename);
         $res = (yield $file);
 
-        yield $res['response'];
+        yield $res;
     }
 
     /**
@@ -30,7 +30,7 @@ class AsyncFile
         $file->write($filename, $content, $flags);
         $res = (yield $file);
 
-        yield $res['response'];
+        yield $res;
     }
 
     private static function checkWritePermission($filename)

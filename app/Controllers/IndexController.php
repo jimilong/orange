@@ -35,9 +35,11 @@ class IndexController
         yield app('asyncLog')->debug('async log test!!');
 
         try {
-            $r = (yield AsyncMysql::query('select * from ad limit 1'));
+            yield AsyncMysql::begin();
+            $r = (yield AsyncMysql::query('update ad set title = "666" where id = 65'));
             //$r = (yield AsyncRedis::hGet('HASH:U:INFO:12345678', 'nickname'));
-            var_dump('res');
+            var_dump($r);
+            yield AsyncMysql::rollback();
         } catch (\Exception $e) {
             var_dump($e->getMessage());
         }

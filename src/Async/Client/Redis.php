@@ -53,15 +53,14 @@ class Redis implements Base
     }
 
     public function execute(callable $callback, $task)
-    {   
-        $this->calltime = microtime(true);
-
+    {
         if ($this->connected === true) {
             $this->doCallback($callback);
         } else {
             $this->redis->connect($this->ip, $this->port, function (\swoole_redis $client, $res) use ($callback) {
                 if ($res === false) {
-                    call_user_func_array($callback, array('response' => false, 'error' => "connect to redis server failed", 'calltime' => 0));
+                    $e = new \Exception($client->errMsg, $client->errCode);
+                    call_user_func_array($callback, [false, $e]);
                     return;
                 }
 
@@ -76,11 +75,11 @@ class Redis implements Base
         $method = $this->method;
         $parameters = $this->parameters;
         array_push($parameters, function(\swoole_redis $client, $res) use ($callback) {
-            $this->calltime = microtime(true) - $this->calltime;
             if ($res === false) {
-                call_user_func_array($callback, array('response' => false, 'error' => $client->errMsg, 'calltime' => $this->calltime));
+                $e = new \Exception($client->errMsg, $client->errCode);
+                call_user_func_array($callback, [false, $e]);
             } else {
-                call_user_func_array($callback, array('response' => $res, 'error' => null, 'calltime' => $this->calltime));
+                call_user_func_array($callback, [$res]);
             }
         });
 

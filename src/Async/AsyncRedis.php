@@ -3,7 +3,6 @@
 namespace Orange\Async;
 
 use Orange\Async\Pool\RedisProxy;
-use Orange\Application\Code;
 
 class AsyncRedis
 {   
@@ -29,12 +28,6 @@ class AsyncRedis
         $redis->setMethod($method);
         $redis->setParameters($parameters);
         $res = (yield $redis);
-        if ($res && $res['response']) {
-            yield $res['response'];
-        } else {
-            $e = new \Exception($res['error'], Code::ASYNC_REDIS_COMMAND);
-            yield throwException($e);
-            //yield false;
-        }
+        yield $res;
     }
 }

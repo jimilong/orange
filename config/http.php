@@ -2,7 +2,6 @@
 return [
     'onWorkStartServices' => [
         'Orange\ServiceProvider\ConfigServiceProvider',
-        'Orange\ServiceProvider\LoggerServiceProvider',
         'Orange\ServiceProvider\RouterServiceProvider',
         'Orange\ServiceProvider\SyncLogServiceProvider',
         'Orange\ServiceProvider\AsyncLogServiceProvider',
