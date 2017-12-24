@@ -24,7 +24,7 @@ class Manager
         $discovery->connect();
 
         \Swoole\Timer::tick(5000, function() {
-            app('logger')->debug('刷新服务', $this->serverMap);
+            app('syncLog')->debug('刷新服务', $this->serverMap);
             $this->createConnection();
         });
     }

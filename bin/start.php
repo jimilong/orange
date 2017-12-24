@@ -12,6 +12,7 @@ use Orange\Async\AsyncMysql;
 use Orange\Async\AsyncTcp;
 use Orange\Server\HttpServer;
 use Orange\Protocol\Packet;
+use Orange\Promise\Promise;
 
 function echoTimes($msg, $max) {
     for ($i = 1; $i <= $max; ++$i) {
@@ -132,51 +133,78 @@ function task1() {
 }
 
 
+function test_promise()
+{
+    $promise = new Promise(function ($resolve, $reject) {
+        swoole_timer_after(2000, $resolve);
+    });
+
+    $promise->then(function ($value) {
+
+        yield 2222;
+        echo "1111".PHP_EOL;
+        //return $value;
+    });
+}
 
 
 
-//Task::execute(readFile1());
+
+//test_promise();
+
+function test_yield()
+{
+    $a = (yield test_promise());
+
+    echo '333'.PHP_EOL;
+    var_dump($a);
+}
+
+Task::execute(test_yield());
+
+
+
 
 //////********************//////////
 
-define('APP_NAME', 'orange_http');
-
-$options = getopt("s:");
-$options = empty($options) ? '' : $options['s'];
-
-$file = __ROOT__ . 'config/http.php';
-$config = Config::getInstance();
-$config->load($file);
-$pidFile = $config->get('http::setting')['pid_file'];
-
-$pid = null;
-if(file_exists($pidFile)){
-    $pid = file_get_contents($pidFile);
-}
-
-if($pid && $options){
-    switch($options){
-        //reload worker
-        case 'reload':
-            exec('kill -USR1 '.$pid);
-            echo "reload success ! \n";
-            break;
-        case 'stop':
-            //kill -SIGTERM is doesn't work
-            exec('kill -TERM '.$pid);
-            echo "stop service ! \n";
-            break;
-        case 'start':
-            $app = \Orange\Application\Application::instance();
-            $app->run('http');
-            echo "start service ! \n";
-            break;
-        default:
-            echo "No no such pid file \n";
-    }
-}else {
-    if ($options == 'start') {
-        $app = \Orange\Application\Application::instance();
-        $app->run('http');
-    }
-}
+//define('APP_NAME', 'orange_http');
+//
+//$options = getopt("s:");
+//$options = empty($options) ? '' : $options['s'];
+//
+//$file = __ROOT__ . 'config/http.php';
+//$config = Config::getInstance();
+//$config->load($file);
+//$pidFile = $config->get('http::setting')['pid_file'];
+//
+//$pid = null;
+//if(file_exists($pidFile)){
+//    $pid = file_get_contents($pidFile);
+//}
+//
+//if($pid && $options){
+//    switch($options){
+//        //reload worker
+//        case 'reload':
+//            exec('kill -USR1 '.$pid);
+//            echo "reload success ! \n";
+//            break;
+//        case 'stop':
+//            //kill -SIGTERM is doesn't work
+//            exec('kill -TERM '.$pid);
+//            echo "stop service ! \n";
+//            break;
+//        case 'start':
+//            $app = \Orange\Application\Application::instance();
+//            $app->run('http');
+//            echo "start service ! \n";
+//            break;
+//        default:
+//            echo "No no such pid file \n";
+//    }
+//}else {
+//    if ($options == 'start') {
+//        $app = \Orange\Application\Application::instance();
+//        $app->run('http');
+//    }
+//}

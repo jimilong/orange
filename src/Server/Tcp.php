@@ -31,7 +31,7 @@ class Tcp extends ServerAbstract
     public function onConnect($serv, $fd)
     {
         $fdinfo = $serv->connection_info($fd);
-        app('logger')->info('新客户端连接 >> '.$fdinfo['remote_ip'].':'.$fdinfo['remote_port']);
+        app('syncLog')->info('新客户端连接 >> '.$fdinfo['remote_ip'].':'.$fdinfo['remote_port']);
     }
 
     public function start()

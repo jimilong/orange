@@ -82,7 +82,7 @@ class Packet
         return $this->code;
     }
 
-    public function setData($data)
+    public function setData(array $data)
     {
         $this->bodyStream = json_encode($data);
     }

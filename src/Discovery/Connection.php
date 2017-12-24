@@ -54,7 +54,7 @@ class Connection implements Base
         $this->name[$askId] = $packet->getService();
         $this->isFinish[$askId] = false;
         $this->send($packet->getStream());
-        app('logger')->debug('异步RPC调用开始 >> '.$packet->desc());
+        app('syncLog')->debug('异步RPC调用开始 >> '.$packet->desc());
         $task->getContext()->setData('rpcData', null);//
         Timer::after($timeout, function () use ($askId, $callback) {
             if (isset($this->isFinish[$askId]) && !$this->isFinish[$askId]) {
@@ -62,7 +62,8 @@ class Connection implements Base
                 unset($this->callback[$askId]);
                 unset($this->calltime[$askId]);
                 unset($this->name[$askId]);
-                call_user_func_array($callback, array('response' => false, 'error' => 'timeout', 'calltime' => $this->calltime));
+                $e = new \Exception('rpc timeout', 503);
+                call_user_func_array($callback, [false, $e]);
             }
         });
     }
@@ -76,17 +77,16 @@ class Connection implements Base
             if (isset($this->name[$askId])) {
                 $packet->setName($this->name[$askId]);
             }
-            $calltime = microtime(true) - $this->calltime[$askId];
             $return = $packet->getData();
-            call_user_func_array($this->callback[$askId], array('response' => $return, 'error' => null, 'calltime' => $calltime));
-            app('logger')->debug('异步RPC调用响应 >> '.$packet->desc());
+            call_user_func_array($this->callback[$askId], [$return]);
+            app('syncLog')->debug('异步RPC调用响应 >> '.$packet->desc());
             unset($this->calltime[$askId]);
             unset($this->callback[$askId]);
             unset($this->name[$askId]);
         } else {
             if ($packet->getService() == crc32('Common.Server.Keeplive')) {
                 $packet->setName('Common.Server.Keeplive');
-                app('logger')->debug('服务心跳响应 >> '.$packet->desc());
+                app('syncLog')->debug('服务心跳响应 >> '.$packet->desc());
             }
         }
     }
@@ -98,7 +98,7 @@ class Connection implements Base
             $packet->setAskId(AskId::create());
             $packet->setData(['ts' => microtime(true)]);
             $cli->send($packet->getStream());
-            app('logger')->debug('与服务保持心跳开始 >> '.$packet->desc());
+            app('syncLog')->debug('与服务保持心跳开始 >> '.$packet->desc());
         });
     }
 

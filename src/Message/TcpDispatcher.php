@@ -48,7 +48,7 @@ class TcpDispatcher
         $object->service = $service;
         $object->id = crc32($service);
         $object->handler = $handler;
-        app('logger')->debug('协议处理', [
+        app('syncLog')->debug('协议处理', [
             'name' => $name, 'service' => $service, 'protocol' => $protocol,
             'id' => $object->id,
         ]);
@@ -60,7 +60,7 @@ class TcpDispatcher
     {
         if (isset($this->accepts[$packet->getService()])) {
             $packet->setName($this->accepts[$packet->getService()]->service);
-            app('logger')->debug('协议开始', [$packet->desc()]);
+            app('syncLog')->debug('协议开始', [$packet->desc()]);
             $handler = $this->accepts[$packet->getService()];
             $packet->name = $handler->service;
             $class = $handler->handler;

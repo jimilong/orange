@@ -31,7 +31,7 @@ abstract class Service
             try {
                 return $this->invoke();
             } catch (\Exception $e) {
-                app('logger')->error('invoke fail', [
+                app('syncLog')->error('invoke fail', [
                     'error' => $e->getMessage(),
                     'code'  => $e->getCode(),
                     'file'  => $e->getFile(),
@@ -57,7 +57,7 @@ abstract class Service
         $this->conn->send();
 
         // 返回数据
-        app('logger')->debug('返回协议', [$this->response->desc()]);
+        app('syncLog')->debug('返回协议', [$this->response->desc()]);
         return true;
     }
 

@@ -31,7 +31,7 @@ class Discovery
     {
         $this->request = null;
         $packet = new Packet('Common.Server.Discovery', $data);
-        app('logger')->debug('服务发现响应 >> '.$packet->desc());
+        app('syncLog')->debug('服务发现响应 >> '.$packet->desc());
         $this->servers = $packet->getData();
         Manager::getInstance()->setServerMap($this->servers);
     }
@@ -45,7 +45,7 @@ class Discovery
         $packet->setAskId($askId);
         $packet->setData($svrs);
         $cli->send($packet->getStream());
-        app('logger')->debug('服务发现请求 >> '.$packet->desc());
+        app('syncLog')->debug('服务发现请求 >> '.$packet->desc());
         $this->request = $askId;
         Timer::after(1500, function () {
             //请求超时
@@ -59,7 +59,7 @@ class Discovery
             $packet->setAskId($askId);
             $packet->setData($svrs);
             $cli->send($packet->getStream());
-            app('logger')->debug('服务发现请求 >> '.$packet->desc());
+            app('syncLog')->debug('服务发现请求 >> '.$packet->desc());
             $this->request = $askId;
             Timer::after(1500, function () {
                 //请求超时

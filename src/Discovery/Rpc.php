@@ -18,10 +18,6 @@ class Rpc
         $conn = Manager::getInstance()->getConnection($service);
 
         $res = (yield $conn);
-        if ($res && $res['response']) {
-            yield $res['response'];
-        } else {
-            yield false;
-        }
+        yield $res;
     }
 }
