@@ -13,6 +13,10 @@ use Orange\Async\AsyncTcp;
 use Orange\Server\HttpServer;
 use Orange\Protocol\Packet;
 use Orange\Promise\Promise;
+use Orange\Promise\All;
+use Orange\Promise\Race;
+use Orange\Async\AsyncPromiseFile;
+use Orange\Async\AsyncTcpPromise;
 
 function echoTimes($msg, $max) {
     for ($i = 1; $i <= $max; ++$i) {
@@ -84,17 +88,50 @@ function rpcSend()
 
 function readFile1()
 {
-    //for ($i=0;$i<5;$i++) {
-        try {
-            $file = '/Users/longmin/web/test.txt';
-            $resp = (yield AsyncFile::read($file));
-            var_dump($resp);
-        } catch (\Exception $e) {
-            var_dump($e->getMessage());
-        }
-
-    //}
+    try {
+        $file = '/Users/longmin/web/test.txt';
+        $resp = (yield AsyncPromiseFile::read($file));
+        var_dump($resp);
+    } catch (\Exception $e) {
+        var_dump('error', $e->getMessage());
+    }
 }
+
+function testTcp()
+{
+    try {
+        $resp = (yield AsyncTcpPromise::call('user.info', ['uid' => '111', 'nickname' => 'longmsdu']));
+        var_dump($resp);
+    } catch (\Exception $e) {
+        var_dump('tcp error', $e->getMessage());
+    }
+}
+
+Task::execute(testTcp());
+
+//function p($str) {
+//    echo $str.PHP_EOL;
+//    yield throwException(new \Exception('test error', 100));
+//}
+//
+//function t($str) {
+//    yield p($str);
+//}
+//
+//function gen() {
+//    try {
+//        yield t('hello');
+//        yield t('world');
+//    }
+//    catch (\Exception $e) {
+//        echo $e->getMessage().PHP_EOL;
+//    }
+//    //yield t('test');
+//    //yield t('end');
+//}
+
+
+
 
 //$container = new \Orange\Container\Container();
 
@@ -109,59 +146,43 @@ function readFile1()
 //Task::execute(writeFile(), 0, $container);
 //Task::execute(task1(), 0, $container);
 
-function task3() {
-    echo 'do task3'.PHP_EOL;
-    $e = new \Exception('test yield error', 11110);
-    yield throwException($e);
-    yield $a = 1 + 2;
+
+function testOut() {
+    $promise1=  new Promise(function ($resolve, $reject) {
+        swoole_timer_after(2000, function () use ($resolve) {
+            $resolve(1);
+        });
+    });
+//
+//    $promise2 = new Promise(function ($resolve, $reject) {
+//        swoole_timer_after(1000, function () use ($reject) {
+//            $reject(2);
+//        });
+//    });
+
+    $race = Promise::race([$promise1, timeout(20)]);
+
+//    $race->then(function ($value) {
+//        var_dump('y', $value);
+//    })->eCatch(function ($e) {
+//        var_dump('n', $e);
+//    });
+
+
+    return $race;
 }
 
-function task2() {
-    echo 'do task2'.PHP_EOL;
-    $a = (yield task3());
-    echo 'task3-resp:'.$a.PHP_EOL;
-    //task3();
-}
-
-function task1() {
-    echo 'do task1'.PHP_EOL;
+function testYield() {
     try {
-        yield task2();
+        $res = (yield testOut());
+        var_dump('done', $res);
     } catch (\Exception $e) {
-        var_dump($e->getMessage());
+        var_dump('e', $e->getMessage());
     }
+
 }
 
-
-function test_promise()
-{
-    $promise = new Promise(function ($resolve, $reject) {
-        swoole_timer_after(2000, $resolve);
-    });
-
-    $promise->then(function ($value) {
-
-        yield 2222;
-        echo "1111".PHP_EOL;
-        //return $value;
-    });
-}
-
-
-
-
-//test_promise();
-
-function test_yield()
-{
-    $a = (yield test_promise());
-
-    echo '333'.PHP_EOL;
-    var_dump($a);
-}
-
-Task::execute(test_yield());
-
+//Task::execute(testYield());
 
 
 

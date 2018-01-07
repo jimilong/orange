@@ -5,6 +5,9 @@ use Orange\Coroutine\SysCall;
 use Orange\Coroutine\Task;
 use Orange\Coroutine\Scheduler;
 use Orange\Coroutine\Signal;
+use Orange\Promise\Promise;
+use Orange\Promise\Race;
+use Orange\Exception\TimeoutException;
 
 /**
  * Get the available container instance.
@@ -63,3 +66,33 @@ function throwException($e) {
         return Signal::TASK_CONTINUE;
     });
 }
+
+
+function timeout($ms, $ec = TimeoutException::class)
+{
+    $racer = Promise::deferred();
+    if ($ms > 0) {
+        \Swoole\Timer::after($ms, static function () use ($racer, $ec) {
+            $racer->reject(new $ec);
+        });
+    }
+    return $racer;
+}
+
+
+//function msleep(int $ms, Closure $do = null)
+//{
+//    return new Promise(function (Promise $promised) use ($ms, $do) {
+//        Timer::after($ms, static function () use ($promised, $do) {
+//            $promised->resolve($do ? $do() : null);
+//        });
+//    });
+//}
+
+//function await(Closure $program, int $ms = 60000, string $ec = TimeoutException::class)
+//{
+//    $race =  new Race([new Promise(function ($resolve, $reject) use ($program) {
+//            //todo
+//             }), timeout($ms, $ec)]);
+//
+//}

@@ -9,6 +9,8 @@ namespace Orange\Promise;
 
 class Promise
 {
+    use Race,All;
+
     private $result = null;
 
     private $stack = null;
@@ -105,7 +107,7 @@ class Promise
         return $this;
     }
 
-    public function pCatch(callable $reject)
+    public function eCatch(callable $reject)
     {
         if ($this->result instanceof RejectedResult) {
             $value = $reject($this->result->getValue());
@@ -119,5 +121,10 @@ class Promise
         }
 
         return $this;
+    }
+
+    public static function deferred()
+    {
+        return new Promise(null);
     }
 }

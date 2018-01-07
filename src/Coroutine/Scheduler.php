@@ -3,6 +3,7 @@
 namespace Orange\Coroutine;
 
 use Orange\Async\Client\Base;
+use Orange\Promise\Promise;
 
 class Scheduler
 {
@@ -63,7 +64,7 @@ class Scheduler
             return;
         }
 
-        try{//todo ??
+        try{
             if ($isFirstCall) {
                 $coroutine = $this->task->getCoroutine();
             } else {
@@ -83,19 +84,39 @@ class Scheduler
         }
     }
 
-    public function asyncCallback($response, $exception = null)
+    public function asyncException($e)
     {
-        if ($this->isTaskInvalid($exception)) {
+        if ($this->isTaskInvalid($e)) {
             return;
         }
 
-        // 兼容PHP7 & PHP5
-        if ($exception instanceof \Throwable || $exception instanceof \Exception) {
-            $this->throwException($exception, true, true);
-        } else {
-            $this->task->send($response);
-            $this->task->run();
+        if ($this->isStackEmpty()) {
+            $parent = $this->task->getParentTask();
+            if (null !== $parent && $parent instanceof Task) {
+                $parent->sendException($e);
+            } else {
+                $this->task->getCoroutine()->throw($e);
+            }
+            return;
         }
+
+        try{
+            $coroutine = $this->task->getCoroutine();
+            $this->task->setCoroutine($coroutine);
+            $coroutine->throw($e);
+
+            $this->task->run();
+        } catch (\Throwable $t){
+            $this->throwException($t, false, true);
+        } catch (\Exception $e){
+            $this->throwException($e, false, true);
+        }
+    }
+
+    public function asyncCallback($response)
+    {
+        $this->task->send($response);
+        $this->task->run();
     }
 
     private function handleSysCall($value)
@@ -129,14 +150,14 @@ class Scheduler
 
     private function handleAsyncJob($value)
     {
-        if (!is_subclass_of($value, Base::class)) {
+        if ($value instanceof Promise) {
+            $value->then([$this, 'asyncCallback'])
+                ->eCatch([$this, 'asyncException']);
+
+            return Signal::TASK_WAIT;
+        } else {
             return null;
         }
-
-        /** @var $value Async */
-        $value->execute([$this, 'asyncCallback'], $this->task);
-
-        return Signal::TASK_WAIT;
     }
 
     private function handleTaskStack($value)
@@ -181,7 +202,8 @@ class Scheduler
         if ($status === Signal::TASK_KILLED || $status === Signal::TASK_DONE) {
             // 兼容PHP7 & PHP5
             if ($t instanceof \Throwable || $t instanceof \Exception) {
-                app('syncLog')->error($t->getMessage(), ['code' => $t->getCode(), 'trace' => $t->getTraceAsString()]);
+                //app('syncLog')->error($t->getMessage(), ['code' => $t->getCode(), 'trace' => $t->getTraceAsString()]);
+                //todo echo exception
             }
             return true;
         }
